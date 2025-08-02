@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Suivi Commande → Installation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <i data-lucide="package" class="w-8 h-8"></i>
+            <h1 class="text-2xl font-bold">Pipeline Suivi Commande → Installation</h1>
+        </div>
+        
+        <div class="flex gap-4 flex-wrap">
+            <button onclick="ouvrirModalAjout()" class="bg-green-400 hover:bg-green-300 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Nouvelle Commande
+            </button>
+            <button onclick="ouvrirModalNouveauClient()" class="bg-blue-500 hover:bg-blue-400 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                Nouveau Client
+            </button>
+            <button onclick="ouvrirGestionClients()" class="bg-purple-500 hover:bg-purple-400 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                Gestion Clients
+            </button>
+            <button onclick="sauvegarderDonnees()" class="bg-red-500 hover:bg-red-400 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Sauvegarder
+            </button>
+            <button onclick="ouvrirParametres()" class="bg-yellow-500 hover:bg-yellow-400 px-4 py-2 rounded-lg">
+                Paramètres
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-green-600" id="stat-total">67</div>
+            <div class="text-gray-600 text-sm">Total Commandes</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-yellow-600" id="stat-en-cours">11</div>
+            <div class="text-gray-600 text-sm">En Cours</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-green-600" id="stat-installees">0</div>
+            <div class="text-gray-600 text-sm">Installées</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-green-600" id="stat-ca-total">410 755,69 €</div>
+            <div class="text-gray-600 text-sm">CA Total HT</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-blue-600" id="stat-ca-facture">214 929,80 €</div>
+            <div class="text-gray-600 text-sm">CA Facturé</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-orange-600" id="stat-ca-en-cours">173 207,89 €</div>
+            <div class="text-gray-600 text-sm">CA En Cours</div>
+        </div>
+    </div>
+
+    <div class="px-6 pb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-green-600" id="stat-ppc-mensuel">22 618,00 €</div>
+            <div class="text-gray-600 text-sm">PPC Mensuel Total</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-purple-600" id="stat-ppc-annuel">40 818,60 €</div>
+            <div class="text-gray-600 text-sm">PPC Annuel Projeté</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-gray-600">30j</div>
+            <div class="text-gray-600 text-sm">Délai Moyen</div>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="text-2xl font-bold text-indigo-600" id="stat-clients">60</div>
+            <div class="text-gray-600 text-sm">Clients</div>
+        </div>
+    </div>
+
+    <!-- Filtres et actions -->
+    <div class="px-6 py-4 bg-white border-t border-b">
+        <div class="flex flex-wrap gap-4 items-center justify-between mb-4">
+            <div class="flex gap-4 items-center flex-wrap">
+                <div class="flex items-center gap-2">
+                    <label class="font-medium">Filtrer par statut:</label>
+                    <select id="filter-statut" class="border rounded px-3 py-1">
+                        <option value="tous">Tous</option>
+                        <option value="EN_COURS">En Cours</option>
+                        <option value="FACTUREE">Facturée</option>
+                        <option value="INSTALLEE">Installée</option>
+                        <option value="ANNULEE">Annulée</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="font-medium">Filtrer par client:</label>
+                    <select id="filter-client" class="border rounded px-3 py-1">
+                        <option value="tous">Tous les clients</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="ouvrirModalAjout()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Nouveau Dossier
+                </button>
+                <button onclick="exporterCSV()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Exporter CSV
+                </button>
+                <button id="btn-import" class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    Importer
+                </button>
+                <input type="file" id="file-input" accept=".csv" style="display: none;">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+            <input
+                type="text"
+                id="recherche"
+                placeholder="Rechercher: Client, N° commande, produit..."
+                class="flex-1 border rounded px-3 py-2"
+                oninput="filtrerDossiers()"
+            />
+        </div>
+    </div>
+
+    <!-- Modal des Paramètres -->
+    <div id="modal-parametres" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="settings" class="w-6 h-6 text-purple-600"></i>
+                    <h2 class="text-2xl font-bold">Paramètres du Système</h2>
+                </div>
+                <button onclick="fermerParametres()" class="text-gray-500 hover:text-gray-700">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Onglets -->
+            <div class="flex border-b">
+                <button onclick="changerOngletParametres('intervenants')" 
+                        id="tab-intervenants" 
+                        class="px-6 py-3 text-green-600 border-b-2 border-green-600 font-medium">
+                    Intervenants
+                </button>
+                <button onclick="changerOngletParametres('numerotation')" 
+                        id="tab-numerotation" 
+                        class="px-6 py-3 text-gray-600 hover:text-gray-800">
+                    Numérotation
+                </button>
+                <button onclick="changerOngletParametres('general')" 
+                        id="tab-general" 
+                        class="px-6 py-3 text-gray-600 hover:text-gray-800">
+                    Général
+                </button>
+            </div>
+            
+            <!-- Contenu des onglets -->
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                
+                <!-- Onglet Intervenants -->
+                <div id="content-intervenants" class="block">
+                    <h3 class="text-lg font-bold mb-4">Gestion des Intervenants</h3>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nom de l'intervenant</label>
+                            <input type="text" id="param-nom-intervenant" 
+                                   class="w-full border rounded px-3 py-2" 
+                                   placeholder="Nom ou raison sociale">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Type</label>
+                            <select id="param-type-intervenant" class="w-full border rounded px-3 py-2">
+                                <option value="Technicien interne">Technicien interne</option>
+                                <option value="Sous-traitant">Sous-traitant</option>
+                                <option value="Partenaire">Partenaire</option>
+                                <option value="Freelance">Freelance</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Contact</label>
+                            <input type="text" id="param-contact-intervenant" 
+                                   class="w-full border rounded px-3 py-2" 
+                                   placeholder="Téléphone ou email">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Spécialité</label>
+                            <input type="text" id="param-specialite-intervenant" 
+                                   class="w-full border rounded px-3 py-2" 
+                                   placeholder="Climatisation, Plomberie, Électricité...">
+                        </div>
+                    </div>
+                    
+                    <button onclick="ajouterIntervenant()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                        Ajouter Intervenant
+                    </button>
+                    
+                    <!-- Liste des intervenants -->
+                    <div class="mt-6">
+                        <h4 class="font-medium mb-3">Intervenants existants</h4>
+                        <div id="liste-intervenants" class="space-y-2">
+                            <!-- Les intervenants seront affichés ici -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Onglet Numérotation -->
+                <div id="content-numerotation" class="hidden">
+                    <h3 class="text-lg font-bold mb-4">Configuration de la Numérotation</h3>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Préfixe des commandes</label>
+                            <input type="text" id="param-prefixe" value="MD" 
+                                   class="w-full border rounded px-3 py-2">
+                            <p class="text-sm text-gray-500 mt-1">Ex: MD-2025-001</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Format de l'année</label>
+                            <select id="param-format-annee" class="w-full border rounded px-3 py-2">
+                                <option value="YYYY">Année complète (2025)</option>
+                                <option value="YY">Année courte (25)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nombre de chiffres</label>
+                            <select id="param-nb-chiffres" class="w-full border rounded px-3 py-2">
+                                <option value="2">2 chiffres (01, 02...)</option>
+                                <option value="3">3 chiffres (001, 002...)</option>
+                                <option value="4">4 chiffres (0001, 0002...)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Séparateur</label>
+                            <select id="param-separateur" class="w-full border rounded px-3 py-2">
+                                <option value="-">Tiret (-)</option>
+                                <option value="_">Underscore (_)</option>
+                                <option value=".">Point (.)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-gray-50 rounded">
+                        <label class="block text-sm font-medium mb-2">Aperçu</label>
+                        <div id="apercu-numerotation" class="font-mono text-lg">MD-2025-001</div>
+                    </div>
+                </div>
+                
+                <!-- Onglet Général -->
+                <div id="content-general" class="hidden">
+                    <h3 class="text-lg font-bold mb-4">Paramètres Généraux</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nom de l'entreprise</label>
+                            <input type="text" id="param-nom-entreprise" 
+                                   class="w-full border rounded px-3 py-2" 
+                                   placeholder="Votre entreprise">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Devise par défaut</label>
+                            <select id="param-devise" class="w-full border rounded px-3 py-2">
+                                <option value="EUR">Euro (€)</option>
+                                <option value="USD">Dollar ($)</option>
+                                <option value="GBP">Livre (£)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Délai moyen par défaut (jours)</label>
+                            <input type="number" id="param-delai-defaut" value="30" 
+                                   class="w-full border rounded px-3 py-2">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Statuts personnalisés</label>
+                            <div class="space-y-2">
+                                <div class="flex gap-2">
+                                    <input type="text" placeholder="Nouveau statut" 
+                                           class="flex-1 border rounded px-3 py-2">
+                                    <button class="bg-blue-500 text-white px-4 py-2 rounded">Ajouter</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Thème</label>
+                            <select id="param-theme" class="w-full border rounded px-3 py-2">
+                                <option value="clair">Thème clair</option>
+                                <option value="sombre">Thème sombre</option>
+                                <option value="auto">Automatique</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="flex justify-end gap-3 p-6 border-t bg-gray-50">
+                <button onclick="fermerParametres()" 
+                        class="px-4 py-2 border rounded hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                <button onclick="sauvegarderParametres()" 
+                        class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                    Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'ajout/modification de client -->
+    <div id="modal-client" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="modal-client-title" class="text-xl font-bold mb-4">Nouveau client</h3>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nom/Raison sociale *</label>
+                    <input type="text" id="form-client-nom" class="w-full border rounded px-3 py-2" placeholder="Nom du client">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Type de client</label>
+                    <select id="form-client-type" class="w-full border rounded px-3 py-2">
+                        <option value="PARTICULIER">Particulier</option>
+                        <option value="ENTREPRISE">Entreprise</option>
+                        <option value="ASSOCIATION">Association</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Téléphone</label>
+                    <input type="tel" id="form-client-tel" class="w-full border rounded px-3 py-2" placeholder="01 23 45 67 89">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input type="email" id="form-client-email" class="w-full border rounded px-3 py-2" placeholder="client@email.com">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium mb-1">Adresse</label>
+                    <input type="text" id="form-client-adresse" class="w-full border rounded px-3 py-2" placeholder="123 rue de la Paix, 75001 Paris">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Secteur d'activité</label>
+                    <input type="text" id="form-client-secteur" class="w-full border rounded px-3 py-2" placeholder="Commerce, Restauration, etc.">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Contact préféré</label>
+                    <select id="form-client-contact-pref" class="w-full border rounded px-3 py-2">
+                        <option value="TELEPHONE">Téléphone</option>
+                        <option value="EMAIL">Email</option>
+                        <option value="COURRIER">Courrier</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Notes</label>
+                <textarea id="form-client-notes" class="w-full border rounded px-3 py-2" rows="3" placeholder="Notes sur le client..."></textarea>
+            </div>
+            
+            <div class="flex gap-2 justify-end">
+                <button onclick="fermerModalClient()" class="px-4 py-2 border rounded hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                <button onclick="sauvegarderClient()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="modal-dossier" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Nouveau dossier</h3>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">N° Commande *</label>
+                    <input type="text" id="form-numero" class="w-full border rounded px-3 py-2" placeholder="MD-2025-XX">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Client *</label>
+                    <input type="text" id="form-client" class="w-full border rounded px-3 py-2" placeholder="Nom du client">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Produit</label>
+                    <input type="text" id="form-produit" class="w-full border rounded px-3 py-2" placeholder="TPV, BORNE, etc.">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Montant HT (€)</label>
+                    <input type="number" id="form-montant" class="w-full border rounded px-3 py-2" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">PPC Mensuel (€)</label>
+                    <input type="number" id="form-ppc" class="w-full border rounded px-3 py-2" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Statut</label>
+                    <select id="form-statut" class="w-full border rounded px-3 py-2">
+                        <option value="EN_COURS">En Cours</option>
+                        <option value="FACTUREE">Facturée</option>
+                        <option value="INSTALLEE">Installée</option>
+                        <option value="ANNULEE">Annulée</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Priorité</label>
+                    <select id="form-priorite" class="w-full border rounded px-3 py-2">
+                        <option value="BASSE">Basse</option>
+                        <option value="NORMALE">Normale</option>
+                        <option value="HAUTE">Haute</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Intervenant</label>
+                    <input type="text" id="form-intervenant" class="w-full border rounded px-3 py-2" value="TECH CASHMAG">
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Commentaires</label>
+                <textarea id="form-commentaires" class="w-full border rounded px-3 py-2" rows="3" placeholder="Commentaires sur le dossier..."></textarea>
+            </div>
+            
+            <div class="flex gap-2 justify-end">
+                <button onclick="fermerModal()" class="px-4 py-2 border rounded hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                <button onclick="sauvegarderDossier()" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                    Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des dossiers -->
+    <div class="px-6 pb-6">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">N° Commande</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produit</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant HT</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">PPC Mensuel</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priorité</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Cmd</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Intervenant</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Commentaires</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableau-dossiers" class="divide-y divide-gray-200">
+                        <!-- Les dossiers seront ajoutés ici par JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données initiales
+        let dossiers = [
+            {
+                id: 1,
+                numeroCommande: 'MD-2025-04',
+                client: 'PAP',
+                contact: '📞',
+                produit: 'tpv',
+                montantHT: 400.00,
+                ppcMensuel: 0.00,
+                statut: 'FACTUREE',
+                priorite: 'NORMALE',
+                dateCmd: '30/07/2025',
+                livraison: '-',
+                installation: '-',
+                intervenant: 'TECH CASHMAG',
+                progress: 100,
+                commentaires: 'version gratuite'
+            },
+            {
+                id: 2,
+                numeroCommande: 'MD-2025-05',
+                client: 'MON DRESSING PREFERE',
+                contact: '📞',
+                produit: 'tpv',
+                montantHT: 3500.00,
+                ppcMensuel: 0.00,
+                statut: 'ANNULEE',
+                priorite: 'NORMALE',
+                dateCmd: '30/07/2025',
+                livraison: '-',
+                installation: '-',
+                intervenant: 'TECH CASHMAG',
+                progress: 0,
+                commentaires: 'la cliente a annulé'
+            },
+            {
+                id: 3,
+                numeroCommande: 'MD-2025-06',
+                client: 'MARCHOUR SPORT',
+                contact: '📧',
+                produit: 'BORNE',
+                montantHT: 3684.00,
+                ppcMensuel: 76.90,
+                statut: 'FACTUREE',
+                priorite: 'NORMALE',
+                dateCmd: '30/07/2025',
+                livraison: '-',
+                installation: '-',
+                intervenant: 'TECH CASHMAG',
+                progress: 75,
+                commentaires: 'Installation prévue'
+            }
+        ];
+
+        // Base de données des clients
+        let clients = [
+            {
+                id: 1,
+                nom: 'PAP',
+                type: 'PARTICULIER',
+                telephone: '01 23 45 67 89',
+                email: 'pap@email.com',
+                adresse: '',
+                secteur: '',
+                contactPref: 'TELEPHONE',
+                notes: '',
+                dateCreation: '30/07/2025'
+            },
+            {
+                id: 2,
+                nom: 'MON DRESSING PREFERE',
+                type: 'ENTREPRISE',
+                telephone: '01 98 76 54 32',
+                email: 'contact@mondressing.fr',
+                adresse: '15 rue de la Mode, 75002 Paris',
+                secteur: 'Commerce',
+                contactPref: 'TELEPHONE',
+                notes: 'Magasin de vêtements',
+                dateCreation: '30/07/2025'
+            },
+            {
+                id: 3,
+                nom: 'MARCHOUR SPORT',
+                type: 'ENTREPRISE',
+                telephone: '01 11 22 33 44',
+                email: 'info@marchoursport.fr',
+                adresse: '88 avenue du Sport, 75003 Paris',
+                secteur: 'Sport',
+                contactPref: 'EMAIL',
+                notes: 'Magasin d\'articles de sport',
+                dateCreation: '30/07/2025'
+            }
+        ];
+
+        // Base de données des intervenants
+        let intervenants = [
+            {
+                id: 1,
+                nom: 'TECH CASHMAG',
+                type: 'Technicien interne',
+                contact: '01 23 45 67 89',
+                specialite: 'Installation TPV, BORNE'
+            }
+        ];
+
+        // Paramètres du système
+        let parametres = {
+            numerotation: {
+                prefixe: 'MD',
+                formatAnnee: 'YYYY',
+                nbChiffres: 2,
+                separateur: '-'
+            },
+            general: {
+                nomEntreprise: 'Mon Entreprise',
+                devise: 'EUR',
+                delaiDefaut: 30,
+                theme: 'clair'
+            }
+        };
+
+        let dossierEnEdition = null;
+        let clientEnEdition = null;
